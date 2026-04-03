@@ -14,7 +14,9 @@ requires-python = "==3.10.*"
 # Mirror the main repo's baseline dependencies so install behaves the same.
 dependencies = [
     "albumentations==1.4.18",
-    "av==16.1.0",
+    # PyAV 13+ needs FFmpeg 6+ (e.g. AV_OPT_TYPE_CHLAYOUT). PyAV 15+/16+ need even newer FFmpeg / Python 3.11.
+    # Compute Canada often links FFmpeg 4.x/5.x — use 12.x for source builds; prefer a PyPI wheel when possible.
+    "av>=12.0.0,<13",
     "diffusers==0.35.1",
     "dm-tree==0.1.8",
     "lmdb==1.7.5",
@@ -23,9 +25,9 @@ dependencies = [
     "pandas==2.2.3",
     "peft==0.17.1",
     "termcolor==3.2.0",
-    "torch==2.7.1",
+    "torch>=2.5.0,<2.8.0",
     "triton==3.3.1; sys_platform == 'linux' and platform_machine == 'aarch64'",
-    "torchvision==0.22.1",
+    "torchvision>=0.20.0,<0.23.0",
     "transformers==4.51.3",
     "tyro==0.9.17",
     "click==8.1.8",
@@ -37,11 +39,7 @@ dependencies = [
     "matplotlib==3.10.1",
     "numpy==1.26.4",
     "omegaconf==2.3.0",
-    "scipy==1.15.3",
-    # torchcodec does not currently publish Linux aarch64 wheels.
-    # TODO: build from source when ARM support is required.
-    "torchcodec==0.4.0; platform_machine != 'aarch64' or sys_platform != 'linux'",
-    "wandb==0.23.0",
+    "scipy>=1.14.1,<1.16",
     "pyzmq==27.0.1",
     # deepspeed does not currently publish Linux aarch64 wheels.
     "deepspeed==0.17.6; platform_machine != 'aarch64' or sys_platform != 'linux'",
@@ -61,13 +59,22 @@ gpu = [
     "onnx>=1.20.0",
     "tensorrt>=10.14.1.48.post1",
 ]
+# Not a core dependency: some PyPI mirrors only publish a stub (e.g. 0.0.0.dev0), and
+# Linux aarch64 has no wheels. Video code falls back to pyav/decord/ffmpeg when absent.
+# Install from PyPI when available: pip install 'gr00t[torchcodec]' or pip install torchcodec==0.4.0
+torchcodec = [
+    "torchcodec==0.4.0; platform_machine != 'aarch64' or sys_platform != 'linux'",
+]
+wandb = [
+    "wandb==0.23.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["gr00t*", "open_h*"]
 
 [tool.uv.extra-build-dependencies]
-flash-attn = ["torch==2.7.1", "numpy==1.26.4", "triton==3.3.1"]
+flash-attn = ["torch>=2.5.0,<2.8.0", "numpy==1.26.4", "triton==3.3.1"]
 
 [tool.uv.sources]
 torch = [

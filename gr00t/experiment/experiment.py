@@ -9,7 +9,6 @@ from omegaconf import OmegaConf
 import torch
 import torch.distributed as dist
 from transformers import TrainingArguments, set_seed
-import wandb
 
 from gr00t.configs.base_config import Config
 
@@ -154,6 +153,15 @@ def run(config: Config):
         )
 
     logging.info(f"Saved config to {save_cfg_dir}")
+
+    if config.training.use_wandb:
+        try:
+            import wandb
+        except ImportError as e:
+            raise ImportError(
+                "training.use_wandb is True but wandb is not installed. "
+                "Install with: pip install wandb  or  pip install 'gr00t[wandb]'"
+            ) from e
 
     # Initialize wandb if configured, but only on the main process
     if config.training.use_wandb and global_rank == 0:
